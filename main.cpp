@@ -15,6 +15,24 @@ class MessAuthority{
     void generateWasteReport();
     void generateStudentsReport();
 };
+
+
+class student{
+    protected:
+    long int Enrollment_no;
+    string Student_name;
+    
+    public:
+
+    void Give_feedback();
+    void update_active_status();
+    void view_bill();
+    void pay_bill();
+
+};
+
+
+
 int main(){
     return 0;
 }
