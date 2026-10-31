@@ -1,4 +1,5 @@
 #include<iostream>
+#include<vector>
 using namespace std;
 
 class MessAuthority{
@@ -36,6 +37,32 @@ class student{
     
 };
 
+class meal
+{
+    string mealType; //Breakfast, lunch or dinner
+    vector<string> foodItems;
+    double price; 
+    
+    public:
+    void addFoodItems();
+    void removeFoodItems();
+    void setPrice();
+    double getPrice();
+    void displayMeal();
+};
+
+class menu
+{
+    int menuID;
+    vector<pair<string, vector<meal>>> weeklySchedule; // Will contain whole menu
+
+    public:
+    menu(int id);
+    void setMealsForDay(); // sets up mewals for a day
+    vector<pair<string, vector<meal>>> getWeeklySchedule(); // Returns schedule for a week
+    vector<meal> getMealsForDay(); // Returns schedule of a day
+
+};    
 
 
 int main(){
