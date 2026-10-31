@@ -26,9 +26,10 @@ class student{
 
     void Give_feedback();
     void update_active_status();
-    void view_bill();
+    void view_details(); //shows number of meals ate and total bill
     void pay_bill();
-
+    void Revoke_membership();
+    
 };
 
 
