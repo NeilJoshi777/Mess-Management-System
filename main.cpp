@@ -13,7 +13,7 @@ class MessAuthority{
     void addStudents();
     void removeStudents();
     void generateWasteReport();
-    void generateStudentsReport();
+    void generateStudentsReport();   //report regarding # of students being subscribed, to eat all 3/4 time meals.
 };
 
 
