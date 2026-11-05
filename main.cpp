@@ -1,10 +1,12 @@
 #include<iostream>
-#include<vector>
+#include<bits/stdc++.h>    
 using namespace std;
 
 class MessAuthority{
     string authorityName;
     string authorityID;
+    vector<student>students; //list of all the students
+    menu messMenu;    //Authority can access the mess menu
 
     public:
     void addMeal();
@@ -13,6 +15,8 @@ class MessAuthority{
     void viewMenu();
     void addStudents();
     void removeStudents();
+    void viewStudents();     //checking which students are subscribed to mess or not
+    void viewFeedback();    //viewing the feedback of students
     void generateWasteReport();
     void generateStudentsReport();   //report regarding # of students being subscribed, to eat all 3/4 time meals.
 };
