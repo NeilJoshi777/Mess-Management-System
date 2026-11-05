@@ -27,7 +27,7 @@ class meal
     string mealType; //Breakfast, lunch or dinner
     vector<string> foodItems;
     double price; 
-    
+    friend class MessAuthority;
     public:
      meal(string type, vector<string> items, double p): mealType(type), foodItems(items), price(p) {}
     void addFoodItems();
@@ -99,7 +99,36 @@ class MessAuthority{
         cout << "Invalid day! Please set up the weekly schedule first.\n";
         
     }
-    void removeMeal();
+    void removeMeal(){
+        string day, type;
+
+    cout << "\nEnter day: ";
+    cin >> day;
+
+    cout << "Enter meal type to remove (Breakfast/Lunch/Dinner): ";
+    cin >> type;
+
+    for (auto &entry : messMenu.weeklySchedule) {
+
+        if (entry.first == day) {
+
+            for (auto it = entry.second.begin(); it != entry.second.end(); it++) {
+
+                if (it->mealType == type) {
+
+                    entry.second.erase(it);
+                    cout << "Meal removed successfully!\n";
+                    return;
+                }
+            }
+
+            cout << "No such meal found on " << day << ".\n";
+            return;
+        }
+    }
+
+    cout << "Invalid day!\n";
+    }
     void updateMeal();
     void viewMenu();
     void addStudents();
