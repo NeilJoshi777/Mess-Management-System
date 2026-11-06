@@ -7,10 +7,17 @@ class student{
     protected:
     long int Enrollment_no;
     string Student_name;
-    bool active_status(); 
+    bool active_status; 
     int Due_amount;
     
     public:
+    friend class MessAuthority;
+    student(long int enrollment, string name) {
+    Enrollment_no = enrollment;
+    Student_name = name;
+    active_status = true;
+    Due_amount = 0;
+}
 
     void Give_feedback();
     void update_active_status(); //only able to eat meal if status is active
@@ -60,80 +67,225 @@ class MessAuthority{
     public:
     MessAuthority(string name, string id, int menuId) : authorityName(name), authorityID(id), messMenu(menuId){};
     void addMeal(){
-        string day, type, item;
-        vector<string> foodItems;
-        double price;
-        int n;
 
-        cout << "\nEnter day: ";
-        cin >> day;
+    string day, type, item;
+    vector<string> foodItems;
+    double price;
+    int n;
 
-        cout << "Enter meal type (Breakfast/Lunch/Dinner): ";
-        cin >> type;
-
-        cout << "Enter number of food items: ";
-        cin >> n;
-
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        for (int i = 0; i < n; i++) {
-            cout << "Enter food item " << i + 1 << ": ";
-            getline(cin, item);
-            foodItems.push_back(item);
-        }
-
-        cout << "Enter meal price: ";
-        cin >> price;
-
-        for (auto &entry : messMenu.weeklySchedule) {
-
-            if (entry.first == day) {
-
-                entry.second.push_back(meal(type, foodItems, price));
-
-                cout << "Meal added successfully!\n";
-                return;
-            }
-        }
-
-        cout << "Invalid day! Please set up the weekly schedule first.\n";
-        
-    }
-    void removeMeal(){
-        string day, type;
-
-    cout << "\nEnter day: ";
+    cout << "Enter day: ";
     cin >> day;
 
-    cout << "Enter meal type to remove (Breakfast/Lunch/Dinner): ";
+    cout << "Enter meal type: ";
     cin >> type;
 
-    for (auto &entry : messMenu.weeklySchedule) {
+    cout << "Enter number of food items: ";
+    cin >> n;
 
-        if (entry.first == day) {
+    for (int i = 0; i < n; i++) {
+        cout << "Enter food item: ";
+        cin >> item;
+        foodItems.push_back(item);
+    }
 
-            for (auto it = entry.second.begin(); it != entry.second.end(); it++) {
+    cout << "Enter price: ";
+    cin >> price;
 
-                if (it->mealType == type) {
-
-                    entry.second.erase(it);
-                    cout << "Meal removed successfully!\n";
-                    return;
-                }
-            }
-
-            cout << "No such meal found on " << day << ".\n";
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+        if (messMenu.weeklySchedule[i].first == day) {
+            messMenu.weeklySchedule[i].second.push_back(meal(type, foodItems, price));
+            cout << "Meal added successfully!";
             return;
         }
     }
 
-    cout << "Invalid day!\n";
+    cout << "Day not found!";
     }
-    void updateMeal();
-    void viewMenu();
-    void addStudents();
-    void removeStudents();
-    void viewStudents();     //checking which students are subscribed to mess or not
+    void removeMeal(){
+        string day, type;
+
+    cout << "Enter day: ";
+    cin >> day;
+
+    cout << "Enter meal type to remove: ";
+    cin >> type;
+
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+
+        if (messMenu.weeklySchedule[i].first == day) {
+
+            for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+
+                if (messMenu.weeklySchedule[i].second[j].mealType == type) {
+
+                    messMenu.weeklySchedule[i].second.erase(
+                        messMenu.weeklySchedule[i].second.begin() + j
+                    );
+
+                    cout << "Meal removed successfully!";
+                    return;
+                }
+            }
+
+            cout << "Meal not found!";
+            return;
+        }
+    }
+
+    cout << "Day not found!";
+    }
+    void updateMeal(){
+        string day, type, item;
+    vector<string> foodItems;
+    double price;
+    int n;
+
+    cout << "Enter day: ";
+    cin >> day;
+
+    cout << "Enter meal type to update: ";
+    cin >> type;
+
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+
+        if (messMenu.weeklySchedule[i].first == day) {
+
+            for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+
+                if (messMenu.weeklySchedule[i].second[j].mealType == type) {
+
+                    cout << "Enter number of new food items: ";
+                    cin >> n;
+
+                    foodItems.clear();
+
+                    for (int k = 0; k < n; k++) {
+                        cout << "Enter food item: ";
+                        cin >> item;
+                        foodItems.push_back(item);
+                    }
+
+                    cout << "Enter new price: ";
+                    cin >> price;
+
+                    messMenu.weeklySchedule[i].second[j].foodItems = foodItems;
+                    messMenu.weeklySchedule[i].second[j].price = price;
+
+                    cout << "Meal updated successfully!";
+                    return;
+                }
+            }
+
+            cout << "Meal not found!";
+            return;
+        }
+    }
+
+    cout << "Day not found!";
+
+    }
+    void viewMenu(){
+         for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+
+        cout << "\nDay: " << messMenu.weeklySchedule[i].first << endl;
+
+        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+
+            cout << "\nMeal Type: "
+                 << messMenu.weeklySchedule[i].second[j].mealType;
+
+            cout << "\nFood Items: ";
+
+            for (int k = 0; k < messMenu.weeklySchedule[i].second[j].foodItems.size(); k++) {
+
+                cout << messMenu.weeklySchedule[i].second[j].foodItems[k];
+
+                if (k != messMenu.weeklySchedule[i].second[j].foodItems.size() - 1)
+                    cout << ", ";
+            }
+
+            cout << "\nPrice: Rs. "
+                 << messMenu.weeklySchedule[i].second[j].price << endl;
+
+            cout << "-----------------------------\n";
+        }
+      }
+    }
+    void addStudents(){
+        long int enrollment;
+        string name;
+
+    cout << "Enter Enrollment Number: ";
+    cin >> enrollment;
+
+    // Check if student already exists
+    for (int i = 0; i < students.size(); i++) {
+
+        if (students[i].Enrollment_no == enrollment) {
+            cout << "Student already exists!";
+            return;
+        }
+    }
+
+    cout << "Enter Student Name: ";
+    cin.ignore();
+    getline(cin, name);
+
+    student s(enrollment, name);
+
+    students.push_back(s);
+
+    cout << "Student added successfully!";
+    }
+    void removeStudents(){
+
+    long int enrollment;
+
+    cout << "Enter Enrollment Number of student to remove: ";
+    cin >> enrollment;
+
+    for (int i = 0; i < students.size(); i++) {
+
+        if (students[i].Enrollment_no == enrollment) {
+
+            students.erase(students.begin() + i);
+
+            cout << "Student removed successfully!";
+            return;
+        }
+    }
+
+    cout << "Student not found!";
+    }
+    void viewStudents(){
+        if (students.empty()) {
+        cout << "No students registered yet!";
+        return;
+    }
+
+    for (int i = 0; i < students.size(); i++) {
+
+        cout << "\nStudent " << i + 1 << endl;
+
+        cout << "Enrollment Number: "
+             << students[i].Enrollment_no << endl;
+
+        cout << "Student Name: "
+             << students[i].Student_name << endl;
+
+        cout << "Membership Status: ";
+
+        if (students[i].active_status == true)
+            cout << "Active" << endl;
+        else
+            cout << "Inactive" << endl;
+
+        cout << "Due Amount: Rs. "
+             << students[i].Due_amount << endl;
+
+        cout << "--------------------------\n";
+    }
+    }    //checking which students are subscribed to mess or not
     void viewFeedback();    //viewing the feedback of students
     void generateWasteReport();
     void generateStudentsReport();   //report regarding # of students being subscribed, to eat all 3/4 time meals.
