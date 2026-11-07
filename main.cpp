@@ -2,6 +2,8 @@
 #include<bits/stdc++.h>    
 using namespace std;
 
+class meal;
+class menu;
 class MessAuthority;
 class student{
     protected:
@@ -71,16 +73,17 @@ class student{
         }
 
         int amount;
-        cout << "\nYour current pending bill is: Rs. " << Due_amount << endl;
+        cout <<endl<< "Your current pending bill is: Rs. " << Due_amount << endl;
         cout << "Enter amount to pay: Rs. ";
         cin >> amount;
 
         if (amount <= 0) {
-            cout << "Invalid payment amount!\n";
-        } else if (amount > Due_amount) {
-            cout << "Amount exceeds due bill! Paying exact due amount of Rs. " << Due_amount << " instead.\n";
+            cout << "Invalid payment amount!"<<endl;
+        }
+        else if (amount > Due_amount) {
+            cout << "Amount exceeds due bill, Paying exact due amount of Rs. " << Due_amount << " instead."<<endl;
             Due_amount = 0;
-            cout << "Payment successful! Remaining Due: Rs. 0\n";
+            cout << "Payment successful! Remaining Due: Rs. 0"<<endl;
         } else {
             Due_amount -= amount;
             cout << "Payment of Rs. " << amount << " successful! Remaining Due: Rs. " << Due_amount << endl;
