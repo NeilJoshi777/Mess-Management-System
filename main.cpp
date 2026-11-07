@@ -9,6 +9,7 @@ class student{
     string Student_name;
     bool active_status; 
     int Due_amount;
+    string feedback;
     
     public:
     friend class MessAuthority;
@@ -35,6 +36,9 @@ class meal
     vector<string> foodItems;
     double price; 
     friend class MessAuthority;
+    int quantityPrepared;
+    int quantityConsumed;
+
     public:
      meal(string type, vector<string> items, double p): mealType(type), foodItems(items), price(p) {}
     void addFoodItems();
@@ -286,9 +290,79 @@ class MessAuthority{
         cout << "--------------------------\n";
     }
     }    //checking which students are subscribed to mess or not
-    void viewFeedback();    //viewing the feedback of students
-    void generateWasteReport();
-    void generateStudentsReport();   //report regarding # of students being subscribed, to eat all 3/4 time meals.
+    void viewFeedback(){
+        if (students.empty()) {
+        cout << "No students registered!";
+        return;
+    }
+
+    for (int i = 0; i < students.size(); i++) {
+
+        if (students[i].feedback != "") {
+
+            cout << "\nStudent Name: "
+                 << students[i].Student_name << endl;
+
+            cout << "Feedback: "
+                 << students[i].feedback << endl;
+
+            cout << "-------------------------\n";
+        }
+     }
+    }   //viewing the feedback of students
+    void generateWasteReport(){
+    int totalPrepared = 0;
+    int totalConsumed = 0;
+    int totalWasted = 0;
+
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+
+        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+
+            totalPrepared += messMenu.weeklySchedule[i].second[j].quantityPrepared;
+
+            totalConsumed += messMenu.weeklySchedule[i].second[j].quantityConsumed;
+        }
+    }
+
+    totalWasted = totalPrepared - totalConsumed;
+
+    cout << "\n========== WASTE REPORT ==========\n";
+
+    cout << "Total Food Prepared: " << totalPrepared << " plates\n";
+    cout << "Total Food Consumed: " << totalConsumed << " plates\n";
+    cout << "Total Food Wasted: " << totalWasted << " plates\n";
+
+    cout << "==================================\n";
+    }
+
+    void generateStudentsReport(){
+    int totalStudents = students.size();
+    int activeStudents = 0;
+    int inactiveStudents = 0;
+    int totalDue = 0;
+
+    for (int i = 0; i < students.size(); i++) {
+
+        if (students[i].active_status == true) {
+            activeStudents++;
+        }
+        else {
+            inactiveStudents++;
+        }
+
+        totalDue += students[i].Due_amount;
+    }
+
+    cout << "\n========== STUDENT REPORT ==========\n";
+
+    cout << "Total Students: " << totalStudents << endl;
+    cout << "Active Students: " << activeStudents << endl;
+    cout << "Inactive Students: " << inactiveStudents << endl;
+    cout << "Total Outstanding Dues: Rs. " << totalDue << endl;
+
+    cout << "====================================\n";
+    }   //report regarding # of students being subscribed, to eat all 3/4 time meals.
 };
 
 
