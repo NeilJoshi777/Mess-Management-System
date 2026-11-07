@@ -20,10 +20,73 @@ class student{
     Due_amount = 0;
 }
 
-    void Give_feedback();
-    void update_active_status(); //only able to eat meal if status is active
+    void Give_feedback(){
+        int rating;
+        string comment;
+
+        cout << "\nEnter rating for the mess (1 to 5): ";
+        cin >> rating;
+        while (rating < 1 || rating > 5) {
+            cout << "Invalid rating! Please enter a value between 1 and 5: ";
+            cin >> rating;
+        }
+
+        cout << "Enter your feedback/comments: ";
+        cin >> ws; 
+        getline(cin, comment);
+
+        string feedback = "[Rating: " + to_string(rating) + "/5] " + comment;
+        cout << "Thank you! Your feedback has been recorded successfully.\n";
+    }
+    void update_active_status(){
+        bool choice;
+        if(active_status){
+            cout<<"Your account is cuurently active."<<endl;
+            cout<<"Would you like to Deactivate: True(1) or False(0)"<<endl;
+            cin>>choice;
+            if(choice==1){
+                active_status = false;
+                cout<<"Changes Saved.";
+            }
+            else if(choice>1||choice<0){
+                cout<<"Invalid Input no changes done."<<endl;
+            }
+        }
+        else{
+            cout<<"Your Account is Currently Inactive."<<endl;
+            cout<<"Would you like to Activate: True(1) or False(0)";
+            cin>>choice;
+            if(choice ==1){
+                active_status =true;
+                cout<<"Changes Saved.";
+            }
+        }
+    } //only able to eat meal if status is active
     void view_details(); //shows number of meals ate and total bill
-    void pay_bill();
+    
+    void pay_bill(){
+        if (Due_amount <= 0) {
+            cout << "\nNo pending dues! Your bill is already clear.\n";
+            return;
+        }
+
+        int amount;
+        cout << "\nYour current pending bill is: Rs. " << Due_amount << endl;
+        cout << "Enter amount to pay: Rs. ";
+        cin >> amount;
+
+        if (amount <= 0) {
+            cout << "Invalid payment amount!\n";
+        } else if (amount > Due_amount) {
+            cout << "Amount exceeds due bill! Paying exact due amount of Rs. " << Due_amount << " instead.\n";
+            Due_amount = 0;
+            cout << "Payment successful! Remaining Due: Rs. 0\n";
+        } else {
+            Due_amount -= amount;
+            cout << "Payment of Rs. " << amount << " successful! Remaining Due: Rs. " << Due_amount << endl;
+        }
+    }
+    
     void Revoke_membership();
     void mark_attendence(); //count meals ate
     void view_menu();
