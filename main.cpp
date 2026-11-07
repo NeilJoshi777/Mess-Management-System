@@ -5,6 +5,20 @@ using namespace std;
 class meal;
 class menu;
 class MessAuthority;
+
+static int readInt(const string& prompt, int lo, int hi) {
+    int value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= lo && value <= hi) {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            return value;
+        }
+        cin.clear();                                              
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid input. Enter a number between " << lo << " and " << hi << ".\n";
+    }
+}
 class student{
     protected:
     long int Enrollment_no;
@@ -13,6 +27,7 @@ class student{
     int Due_amount;
     string feedback;
     int MealsEaten;
+    bool revoked;
 
     public:
     friend class MessAuthority;
@@ -23,6 +38,7 @@ class student{
     Due_amount = 0;
     MealsEaten =0;
     feedback= "";
+    revoked = false;
     
 }
 
@@ -44,39 +60,31 @@ class student{
         feedback = "[Rating: " + to_string(rating) + "/5] " + comment;
         cout << "Thank you! Your feedback has been recorded successfully.\n";
     }
+    
     void update_active_status(){
-        bool choice;
-        if(active_status){
-            cout<<"Your account is cuurently active."<<endl;
-            cout<<"Would you like to Deactivate: True(1) or False(0)"<<endl;
-            cin>>choice;
-            if(choice==1){
-                active_status = false;
-                cout<<"Changes Saved.";
-            }
-            else if(choice>1||choice<0){
-                cout<<"Invalid Input no changes done."<<endl;
-            }
+        if (revoked) {
+            cout << "Your membership was revoked. Contact the mess authority to rejoin.\n";
+            return;
         }
-        else{
-            cout<<"Your Account is Currently Inactive."<<endl;
-            cout<<"Would you like to Activate: True(1) or False(0)";
-            cin>>choice;
-            if(choice ==1){
-                active_status =true;
-                cout<<"Changes Saved.";
-            }
+        cout << "Your account is currently " << (active_status ? "Active" : "Inactive") << ".\n";
+        string action = active_status ? "Deactivate" : "Activate";
+        if (readInt("Would you like to " + action + "? Yes(1) / No(0): ", 0, 1) == 1) {
+            active_status = !active_status;
+            cout << "Changes saved. Account is now "<< (active_status ? "Active" : "Inactive") << ".\n";
+        } 
+        else {
+            cout << "No changes made.\n";
         }
     } //only able to eat meal if status is active
     void view_details(){
         cout << "\n========== STUDENT DETAILS ==========\n";
-        cout << "Enrollment Number : " << Enrollment_no << endl;
-        cout << "Student Name      : " << Student_name << endl;
-        cout << "Membership Status : " << (active_status ? "Active" : "Inactive") << endl;
-        cout << "Total Meals Eaten : " << MealsEaten << endl;
-        cout << "Total Due Bill    : Rs. " << Due_amount << endl;
-        cout << "Latest Feedback   : " << (feedback.empty() ? "No feedback given yet" : feedback) << endl;
-        cout << "=====================================\n";
+        cout<< "Enrollment Number : " << Enrollment_no << '\n';
+        cout<< "Student Name      : " << Student_name << '\n';
+        cout<< "Membership Status : " << (revoked ? "Revoked" : active_status ? "Active" : "Inactive") << '\n';
+        cout<< "Total Meals Eaten : " << MealsEaten << '\n';
+        cout<< "Total Due Bill    : Rs. " << Due_amount << '\n';
+        cout<< "Latest Feedback   : " << (feedback.empty() ? "No feedback given yet" : feedback) << '\n';
+        cout<< "=====================================\n";
     }
     
     void pay_bill(){
@@ -84,28 +92,39 @@ class student{
             cout << "\nNo pending dues! Your bill is already clear.\n";
             return;
         }
-
-        int amount;
-        cout <<endl<< "Your current pending bill is: Rs. " << Due_amount << endl;
-        cout << "Enter amount to pay: Rs. ";
-        cin >> amount;
-
-        if (amount <= 0) {
-            cout << "Invalid payment amount!"<<endl;
+        cout << "\nYour current pending bill is: Rs. " << Due_amount << '\n';
+        int amount = readInt("Enter amount to pay: Rs. ", 1, numeric_limits<int>::max());
+ 
+        if (amount > Due_amount) {
+            cout << "Amount exceeds due bill. Paying exact due of Rs. " << Due_amount << " instead.\n";
+            amount = static_cast<int>(Due_amount);   // see note: use paise/int for money if you want exactness
         }
-        else if (amount > Due_amount) {
-            cout << "Amount exceeds due bill, Paying exact due amount of Rs. " << Due_amount << " instead."<<endl;
-            Due_amount = 0;
-            cout << "Payment successful! Remaining Due: Rs. 0"<<endl;
-        } else {
-            Due_amount -= amount;
-            cout << "Payment of Rs. " << amount << " successful! Remaining Due: Rs. " << Due_amount << endl;
-        }
+        Due_amount -= amount;
+        cout << "Payment successful! Remaining Due: Rs. " << Due_amount << '\n';
     }
+
     
-    void Revoke_membership();
-    void mark_attendence(); //count meals ate
-    void view_menu();
+    void Revoke_membership(){
+    if (revoked) {
+        cout << "Membership is already revoked.\n";
+        return;
+    }
+    if (Due_amount > 0) {
+        cout << "Cannot revoke membership with pending dues of Rs. " << Due_amount
+             << ". Please pay your bill first.\n";
+        return;
+    }
+    cout << "Revoking means you leave the mess permanently.\n";
+    if (readInt("Are you sure? Yes(1) / No(0): ", 0, 1) == 1) {
+        revoked = true;
+        active_status = false;
+        cout << "Your membership has been revoked.\n";
+    } else {
+        cout << "Cancelled. Membership unchanged.\n";
+    }
+}
+    void mark_attendence(meal &m); //count meals ate
+    void view_menu(menu& men);
     
 };
 
@@ -140,6 +159,36 @@ class menu
     vector<meal> getMealsForDay(); // Returns schedule of a day
 
 };    
+
+void student::mark_attendence(meal& m) {
+    if (revoked || !active_status) {
+        cout << "Your account is not active, so you cannot eat a meal. Activate it first.\n";
+        return;
+    }
+    MealsEaten++;
+    Due_amount += m.getPrice();
+    //m.recordConsumption();
+    //cout << "Attendance marked for " << m.getMealType()//---------------------------------------------------------->>>>>>>
+         //<< ". Rs. " << m.getPrice() << " added to your bill.\n";
+}
+
+void student::view_menu(menu& mn){
+    const auto& schedule = mn.getWeeklySchedule();
+    if (schedule.empty()) {
+        cout << "Menu has not been set yet.\n";
+        return;
+    }
+    cout << "\n========== WEEKLY MENU ==========\n";
+    for (const auto& day : schedule) {
+        cout << "\nDay: " << day.first << '\n';
+        for (const auto& m : day.second) {
+            //m.displayMeal();----------------------------------------------------------------------->>>>>>>>>>>>>>>
+            cout << "-----------------------------\n";
+        }
+    }
+}
+
+
 
 class MessAuthority{
     string authorityName;
