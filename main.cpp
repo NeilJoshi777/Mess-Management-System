@@ -12,7 +12,8 @@ class student{
     bool active_status; 
     int Due_amount;
     string feedback;
-    
+    int MealsEaten;
+
     public:
     friend class MessAuthority;
     student(long int enrollment, string name) {
@@ -20,6 +21,9 @@ class student{
     Student_name = name;
     active_status = true;
     Due_amount = 0;
+    MealsEaten =0;
+    feedback= "";
+    
 }
 
     void Give_feedback(){
@@ -37,7 +41,7 @@ class student{
         cin >> ws; 
         getline(cin, comment);
 
-        string feedback = "[Rating: " + to_string(rating) + "/5] " + comment;
+        feedback = "[Rating: " + to_string(rating) + "/5] " + comment;
         cout << "Thank you! Your feedback has been recorded successfully.\n";
     }
     void update_active_status(){
@@ -64,7 +68,16 @@ class student{
             }
         }
     } //only able to eat meal if status is active
-    void view_details(); //shows number of meals ate and total bill
+    void view_details(){
+        cout << "\n========== STUDENT DETAILS ==========\n";
+        cout << "Enrollment Number : " << Enrollment_no << endl;
+        cout << "Student Name      : " << Student_name << endl;
+        cout << "Membership Status : " << (active_status ? "Active" : "Inactive") << endl;
+        cout << "Total Meals Eaten : " << MealsEaten << endl;
+        cout << "Total Due Bill    : Rs. " << Due_amount << endl;
+        cout << "Latest Feedback   : " << (feedback.empty() ? "No feedback given yet" : feedback) << endl;
+        cout << "=====================================\n";
+    }
     
     void pay_bill(){
         if (Due_amount <= 0) {
