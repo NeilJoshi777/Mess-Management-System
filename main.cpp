@@ -118,7 +118,6 @@ class student{
     if (readInt("Are you sure? Yes(1) / No(0): ", 0, 1) == 1) {
         revoked = true;
         active_status = false;
-        //remove_student()
         cout << "Your membership has been revoked.\n";
     } else {
         cout << "Cancelled. Membership unchanged.\n";
@@ -194,7 +193,7 @@ void student::view_menu(menu& mn){
 class MessAuthority{
     string authorityName;
     string authorityID;
-    vector<student>students; //list of all the students//----------------->> make static???? as it is used in revoke function
+    vector<student>students; //list of all the students
     menu messMenu;    //Authority can access the mess menu
 
     public:
