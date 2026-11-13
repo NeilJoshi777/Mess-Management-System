@@ -138,13 +138,158 @@ class meal
     int quantityConsumed;
 
     public:
-     meal(string type, vector<string> items, double p): mealType(type), foodItems(items), price(p) {}
-    void addFoodItems();
-    void removeFoodItems();
-    void setPrice();
-    double getPrice();
-    void displayMeal();
+    meal(string type, vector<string> items, double p, int prepared = 0);
+    
+    void setQuantityPrepared(int quantity);
+    bool recordConsumption() {
+        if (quantityConsumed >= quantityPrepared)
+        {
+            cout << "Sorry! This meal is out of stock.\n";
+            return false;
+        }
+
+        quantityConsumed++;
+
+        return true;
+}
+
+    int getQuantityPrepared() const{
+        return quantityPrepared;
+}
+
+    int getQuantityConsumed() const{
+        return quantityConsumed;
+} 
+    
+    void addFoodItems() {
+        int n;
+        string item;
+
+        n = readInt("How many food items do you want to add? ", 1, 50);
+
+        for (int i = 0; i < n; i++)
+        {
+            cout << "Enter food item " << i + 1 << ": ";
+
+            cin >> ws;
+            getline(cin, item);
+
+            foodItems.push_back(item);
+        }
+
+        cout << "Food items added successfully!\n";
+    }
+    
+    void removeFoodItems() {
+        if (foodItems.empty())
+        {
+            cout << "No food items available to remove.\n";
+            return;
+        }
+
+        string item;
+
+        cout << "\nCurrent food items:\n";
+
+        for (int i = 0; i < foodItems.size(); i++)
+        {
+            cout << i + 1 << ". " << foodItems[i] << '\n';
+        }
+
+        cout << "Enter the name of the food item to remove: ";
+
+        cin >> ws;
+        getline(cin, item);
+
+        auto it = find(foodItems.begin(), foodItems.end(), item);
+
+        if (it != foodItems.end())
+        {
+            foodItems.erase(it);
+            cout << "Food item removed successfully!\n";
+        }
+        else
+        {
+            cout << "Food item not found!\n";
+        }
+}
+    
+    void setPrice() {
+        double newPrice;
+
+        while (true)
+        {
+            cout << "Enter new meal price: Rs. ";
+
+            if (cin >> newPrice && newPrice >= 0)
+            {
+                price = newPrice;
+
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                cout << "Price updated successfully!\n";
+                return;
+            }
+
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            cout << "Invalid price! Enter a non-negative number.\n";
+        }
+}
+
+    double getPrice() const{
+        return price;
+}
+    
+    void displayMeal() const{
+        cout << "\nMeal Type: " << mealType;
+
+        cout << "\nFood Items: ";
+
+        for (int i = 0; i < foodItems.size(); i++)
+        {
+            cout << foodItems[i];
+
+            if (i != foodItems.size() - 1)
+                cout << ", ";
+        }
+
+        cout << "\nPrice: Rs. " << price;
+
+        cout << "\nQuantity Prepared: " << quantityPrepared;
+
+        cout << "\nQuantity Consumed: " << quantityConsumed;
+
+        cout << "\nQuantity Remaining: "
+            << quantityPrepared - quantityConsumed << '\n';
+
+        cout << "-----------------------------\n";
+}
+
 };
+
+meal::meal(string type, vector<string> items, double p, int prepared = 0) {   
+    mealType = type;
+    foodItems = items;
+    price = p;
+
+    quantityPrepared = prepared;
+    quantityConsumed = 0;
+}
+
+void meal::setQuantityPrepared(int quantity)
+{
+    if (quantity < quantityConsumed)
+    {
+        cout << "Prepared quantity cannot be less than "
+             << "already consumed quantity.\n";
+        return;
+    }
+
+    quantityPrepared = quantity;
+    cout << "Prepared quantity updated successfully!\n";
+}
 
 class menu
 {
@@ -153,37 +298,163 @@ class menu
     friend class MessAuthority;
 
     public:
-    menu(int id);
-    void setMealsForDay(); // sets up mewals for a day
-    vector<pair<string, vector<meal>>> getWeeklySchedule(); // Returns schedule for a week
-    vector<meal> getMealsForDay(); // Returns schedule of a day
+    menu(int id) {
+        menuID = id;
+        vector<string> days =
+        {
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+        };
+
+        for (int i = 0; i < days.size(); i++)
+        {
+            weeklySchedule.push_back({days[i], vector<meal>()});
+        }
+}
+    
+    void setMealsForDay() {
+        string day, type, item;
+        int n, itemCount, prepared;
+        double price;
+
+        cout << "Enter day: ";
+        cin >> day;
+
+        int dayIndex = -1;
+
+        for (int i = 0; i < weeklySchedule.size(); i++)
+        {
+            if (weeklySchedule[i].first == day)
+            {
+                dayIndex = i;
+                break;
+            }
+        }
+
+        if (dayIndex == -1)
+        {
+            cout << "Invalid day!\n";
+            return;
+        }
+
+        n = readInt("How many meals do you want to set for this day? ", 1, 10);
+
+        for (int i = 0; i < n; i++)
+        {
+            cout << "\nEnter meal type: ";
+            cin >> type;
+
+            itemCount = readInt("Enter number of food items: ", 1, 50);
+
+            vector<string> items;
+
+            for (int j = 0; j < itemCount; j++)
+            {
+                cout << "Enter food item: ";
+
+                cin >> ws;
+                getline(cin, item);
+
+                items.push_back(item);
+            }
+
+            while (true)
+            {
+                cout << "Enter price: Rs. ";
+
+                if (cin >> price && price >= 0)
+                    break;
+
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+                cout << "Invalid price!\n";
+            }
+
+            prepared = readInt("Enter quantity prepared: ", 0, 100000);
+
+            meal m(type, items, price, prepared);
+
+            weeklySchedule[dayIndex].second.push_back(m);
+        }
+
+        cout << "\nMeals added to " << day << " successfully!\n";
+}       // sets up mewals for a day
+
+    const vector<pair<string, vector<meal>>>& getWeeklySchedule() const{
+        return weeklySchedule;
+}       // Returns schedule for a week
+
+    vector<meal>* menu::getMealsForDay(const string& day) {
+        for (int i = 0; i < weeklySchedule.size(); i++)
+        {
+            if (weeklySchedule[i].first == day)
+            {
+                return &weeklySchedule[i].second;
+            }
+        }
+
+        return nullptr;
+}        // Returns schedule of a day
 
 };    
 
-void student::mark_attendence(meal& m) {
-    if (revoked || !active_status) {
-        cout << "Your account is not active, so you cannot eat a meal. Activate it first.\n";
+void student::mark_attendence(meal& m)
+{
+    if (revoked || !active_status)
+    {
+        cout << "Your account is inactive or revoked. "
+             << "You cannot eat a meal.\n";
         return;
     }
+
+    // First check whether a plate is available
+    if (!m.recordConsumption())
+    {
+        return;
+    }
+
+    // Record attendance only if consumption succeeds
     MealsEaten++;
-    Due_amount += m.getPrice();
-    //m.recordConsumption();
-    //cout << "Attendance marked for " << m.getMealType()//---------------------------------------------------------->>>>>>>
-         //<< ". Rs. " << m.getPrice() << " added to your bill.\n";
+
+    // Add meal price to student's pending bill
+    Due_amount += static_cast<int>(m.getPrice());
+
+    cout << "Attendance marked successfully!\n";
+    cout << "Meal price added: Rs. " << m.getPrice() << '\n';
+    cout << "Total pending bill: Rs. " << Due_amount << '\n';
 }
 
-void student::view_menu(menu& mn){
+void student::view_menu(menu& mn)
+{
     const auto& schedule = mn.getWeeklySchedule();
-    if (schedule.empty()) {
+
+    if (schedule.empty())
+    {
         cout << "Menu has not been set yet.\n";
         return;
     }
+
     cout << "\n========== WEEKLY MENU ==========\n";
-    for (const auto& day : schedule) {
+
+    for (const auto& day : schedule)
+    {
         cout << "\nDay: " << day.first << '\n';
-        for (const auto& m : day.second) {
-            //m.displayMeal();----------------------------------------------------------------------->>>>>>>>>>>>>>>
-            cout << "-----------------------------\n";
+
+        if (day.second.empty())
+        {
+            cout << "No meals added for this day.\n";
+            continue;
+        }
+
+        for (const auto& m : day.second)
+        {
+            m.displayMeal();
         }
     }
 }
@@ -198,12 +469,13 @@ class MessAuthority{
 
     public:
     MessAuthority(string name, string id, int menuId) : authorityName(name), authorityID(id), messMenu(menuId){};
-    void addMeal(){
-
+    void addMeal()
+    {
     string day, type, item;
     vector<string> foodItems;
+
     double price;
-    int n;
+    int n, prepared;
 
     cout << "Enter day: ";
     cin >> day;
@@ -211,27 +483,47 @@ class MessAuthority{
     cout << "Enter meal type: ";
     cin >> type;
 
-    cout << "Enter number of food items: ";
-    cin >> n;
+    n = readInt("Enter number of food items: ", 1, 50);
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         cout << "Enter food item: ";
-        cin >> item;
+
+        cin >> ws;
+        getline(cin, item);
+
         foodItems.push_back(item);
     }
 
-    cout << "Enter price: ";
-    cin >> price;
+    while (true)
+    {
+        cout << "Enter price: Rs. ";
 
-    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
-        if (messMenu.weeklySchedule[i].first == day) {
-            messMenu.weeklySchedule[i].second.push_back(meal(type, foodItems, price));
-            cout << "Meal added successfully!";
+        if (cin >> price && price >= 0)
+            break;
+
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        cout << "Invalid price!\n";
+    }
+
+    prepared = readInt("Enter quantity prepared: ", 0, 100000);
+
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
+    {
+        if (messMenu.weeklySchedule[i].first == day)
+        {
+            meal m(type, foodItems, price, prepared);
+
+            messMenu.weeklySchedule[i].second.push_back(m);
+
+            cout << "Meal added successfully!\n";
             return;
         }
     }
 
-    cout << "Day not found!";
+    cout << "Day not found!\n";
     }
     void removeMeal(){
         string day, type;
@@ -266,11 +558,9 @@ class MessAuthority{
 
     cout << "Day not found!";
     }
-    void updateMeal(){
-        string day, type, item;
-    vector<string> foodItems;
-    double price;
-    int n;
+    void updateMeal()
+{
+    string day, type;
 
     cout << "Enter day: ";
     cin >> day;
@@ -278,44 +568,63 @@ class MessAuthority{
     cout << "Enter meal type to update: ";
     cin >> type;
 
-    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
+    {
+        if (messMenu.weeklySchedule[i].first == day)
+        {
+            for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++)
+            {
+                if (messMenu.weeklySchedule[i].second[j].mealType == type)
+                {
+                    meal& m = messMenu.weeklySchedule[i].second[j];
 
-        if (messMenu.weeklySchedule[i].first == day) {
+                    cout << "\nWhat do you want to update?\n";
+                    cout << "1. Add food items\n";
+                    cout << "2. Remove food items\n";
+                    cout << "3. Change price\n";
+                    cout << "4. Change prepared quantity\n";
 
-            for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+                    int choice = readInt("Enter choice: ", 1, 4);
 
-                if (messMenu.weeklySchedule[i].second[j].mealType == type) {
+                    switch (choice)
+                    {
+                        case 1:
+                            m.addFoodItems();
+                            break;
 
-                    cout << "Enter number of new food items: ";
-                    cin >> n;
+                        case 2:
+                            m.removeFoodItems();
+                            break;
 
-                    foodItems.clear();
+                        case 3:
+                            m.setPrice();
+                            break;
 
-                    for (int k = 0; k < n; k++) {
-                        cout << "Enter food item: ";
-                        cin >> item;
-                        foodItems.push_back(item);
+                        case 4:
+                        {
+                            int quantity = readInt(
+                                "Enter new prepared quantity: ",
+                                m.getQuantityConsumed(),
+                                100000
+                            );
+
+                            m.setQuantityPrepared(quantity);
+                            break;
+                        }
                     }
 
-                    cout << "Enter new price: ";
-                    cin >> price;
-
-                    messMenu.weeklySchedule[i].second[j].foodItems = foodItems;
-                    messMenu.weeklySchedule[i].second[j].price = price;
-
-                    cout << "Meal updated successfully!";
+                    cout << "Meal update operation completed.\n";
                     return;
                 }
             }
 
-            cout << "Meal not found!";
+            cout << "Meal not found!\n";
             return;
         }
     }
 
-    cout << "Day not found!";
-
-    }
+    cout << "Day not found!\n";
+}
     void viewMenu(){
          for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
 
@@ -438,32 +747,39 @@ class MessAuthority{
         }
      }
     }   //viewing the feedback of students
-    void generateWasteReport(){
+    void generateWasteReport()
+    {
     int totalPrepared = 0;
     int totalConsumed = 0;
-    int totalWasted = 0;
 
-    for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+    for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
+    {
+        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++)
+        {
+            const meal& m = messMenu.weeklySchedule[i].second[j];
 
-        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+            totalPrepared += m.getQuantityPrepared();
 
-            totalPrepared += messMenu.weeklySchedule[i].second[j].quantityPrepared;
-
-            totalConsumed += messMenu.weeklySchedule[i].second[j].quantityConsumed;
+            totalConsumed += m.getQuantityConsumed();
         }
     }
 
-    totalWasted = totalPrepared - totalConsumed;
+    int totalWasted = totalPrepared - totalConsumed;
 
     cout << "\n========== WASTE REPORT ==========\n";
 
-    cout << "Total Food Prepared: " << totalPrepared << " plates\n";
-    cout << "Total Food Consumed: " << totalConsumed << " plates\n";
-    cout << "Total Food Wasted: " << totalWasted << " plates\n";
+    cout << "Total Food Prepared: "
+         << totalPrepared << " plates\n";
+
+    cout << "Total Food Consumed: "
+         << totalConsumed << " plates\n";
+
+    cout << "Total Food Wasted: "
+         << totalWasted << " plates\n";
 
     cout << "==================================\n";
     }
-
+    
     void generateStudentsReport(){
     int totalStudents = students.size();
     int activeStudents = 0;
