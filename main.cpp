@@ -469,6 +469,19 @@ class MessAuthority{
 
     public:
     MessAuthority(string name, string id, int menuId) : authorityName(name), authorityID(id), messMenu(menuId){};
+    // Find a student by enrollment number (returns nullptr if not found)
+   student* findStudent(long int enrollment) {
+    for (int i = 0; i < students.size(); i++) {
+        if (students[i].Enrollment_no == enrollment)
+            return &students[i];
+    }
+    return nullptr;
+}
+
+// Lets a student view the menu / pick a meal
+   menu& getMenu() {
+    return messMenu;
+}
     void addMeal()
     {
     string day, type, item;
