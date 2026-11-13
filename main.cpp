@@ -269,7 +269,7 @@ class meal
 
 };
 
-meal::meal(string type, vector<string> items, double p, int prepared = 0) {   
+meal::meal(string type, vector<string> items, double p, int prepared) {       
     mealType = type;
     foodItems = items;
     price = p;
@@ -390,7 +390,7 @@ class menu
         return weeklySchedule;
 }       // Returns schedule for a week
 
-    vector<meal>* menu::getMealsForDay(const string& day) {
+    vector<meal>* getMealsForDay(const string& day) {
         for (int i = 0; i < weeklySchedule.size(); i++)
         {
             if (weeklySchedule[i].first == day)
