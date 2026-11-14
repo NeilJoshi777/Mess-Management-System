@@ -35,7 +35,8 @@ meal.h / .cpp - Defines individual meal properties (items, price, stock quantity
 
 utils.h / .cpp - Contains shared helper functions like readInt() for robust input validation.
 
-Prerequisites
+Prerequisites:
+
 A C++ compiler (GCC/MinGW for Windows, Clang for macOS, or standard Linux GCC).
 
 Git Bash or any standard terminal.
