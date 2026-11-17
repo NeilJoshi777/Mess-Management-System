@@ -1,5 +1,6 @@
 #include "MessAuthority.h"
 #include "utils.h" // For readInt
+#include "report.h"
 #include <iostream>
 #include <limits>
 using namespace std;
@@ -8,8 +9,8 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
     // Find a student by enrollment number (returns nullptr if not found)
    student* MessAuthority::findStudent(long int enrollment) {
     for (int i = 0; i < students.size(); i++) {
-        if (students[i].Enrollment_no == enrollment)
-            return &students[i];
+        if (students[i]->Enrollment_no == enrollment)
+            return students[i].get();
     }
     return nullptr;
 }
@@ -20,59 +21,21 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
 }
     void MessAuthority::addMeal()
     {
-    string day, type, item;
-    vector<string> foodItems;
-
-    double price;
-    int n, prepared;
+    string day;
 
     cout << "Enter day: ";
     cin >> day;
 
-    cout << "Enter meal type: ";
-    cin >> type;
-
-    n = readInt("Enter number of food items: ", 1, 50);
-
-    for (int i = 0; i < n; i++)
+    MealList* meals = messMenu.getMealsForDay(day);
+    if (meals == nullptr)
     {
-        cout << "Enter food item: ";
-
-        cin >> ws;
-        getline(cin, item);
-
-        foodItems.push_back(item);
+        cout << "Day not found!\n";
+        return;
     }
 
-    while (true)
-    {
-        cout << "Enter price: Rs. ";
-
-        if (cin >> price && price >= 0)
-            break;
-
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        cout << "Invalid price!\n";
-    }
-
-    prepared = readInt("Enter quantity prepared: ", 0, 100000);
-
-    for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
-    {
-        if (messMenu.weeklySchedule[i].first == day)
-        {
-            meal m(type, foodItems, price, prepared);
-
-            messMenu.weeklySchedule[i].second.push_back(m);
-
-            cout << "Meal added successfully!\n";
-            return;
-        }
-    }
-
-    cout << "Day not found!\n";
+    // Factory returns Breakfast / Lunch / Dinner / SpecialMeal behind a meal pointer.
+    meals->push_back(promptAndCreateMeal());
+    cout << "Meal added successfully!\n";
     }
     void MessAuthority::removeMeal(){
         string day, type;
@@ -80,7 +43,7 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
     cout << "Enter day: ";
     cin >> day;
 
-    cout << "Enter meal type to remove: ";
+    cout << "Enter meal type to remove (Breakfast/Lunch/Dinner/Special): ";
     cin >> type;
 
     for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
@@ -89,7 +52,7 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
 
             for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
 
-                if (messMenu.weeklySchedule[i].second[j].mealType == type) {
+                if (equalsIgnoreCase(messMenu.weeklySchedule[i].second[j]->getCategory(), type)) {
 
                     messMenu.weeklySchedule[i].second.erase(
                         messMenu.weeklySchedule[i].second.begin() + j
@@ -114,7 +77,7 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
     cout << "Enter day: ";
     cin >> day;
 
-    cout << "Enter meal type to update: ";
+    cout << "Enter meal type to update (Breakfast/Lunch/Dinner/Special): ";
     cin >> type;
 
     for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
@@ -123,9 +86,9 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
         {
             for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++)
             {
-                if (messMenu.weeklySchedule[i].second[j].mealType == type)
+                if (equalsIgnoreCase(messMenu.weeklySchedule[i].second[j]->getCategory(), type))
                 {
-                    meal& m = messMenu.weeklySchedule[i].second[j];
+                    meal& m = *messMenu.weeklySchedule[i].second[j];
 
                     cout << "\nWhat do you want to update?\n";
                     cout << "1. Add food items\n";
@@ -175,31 +138,14 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
     cout << "Day not found!\n";
 }
     void MessAuthority::viewMenu(){
-         for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
+        for (size_t i = 0; i < messMenu.weeklySchedule.size(); i++) {
+            cout << "\nDay: " << messMenu.weeklySchedule[i].first << endl;
 
-        cout << "\nDay: " << messMenu.weeklySchedule[i].first << endl;
-
-        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
-
-            cout << "\nMeal Type: "
-                 << messMenu.weeklySchedule[i].second[j].mealType;
-
-            cout << "\nFood Items: ";
-
-            for (int k = 0; k < messMenu.weeklySchedule[i].second[j].foodItems.size(); k++) {
-
-                cout << messMenu.weeklySchedule[i].second[j].foodItems[k];
-
-                if (k != messMenu.weeklySchedule[i].second[j].foodItems.size() - 1)
-                    cout << ", ";
+            for (size_t j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
+                // runtime polymorphism: each meal prints itself
+                messMenu.weeklySchedule[i].second[j]->displayMeal();
             }
-
-            cout << "\nPrice: Rs. "
-                 << messMenu.weeklySchedule[i].second[j].price << endl;
-
-            cout << "-----------------------------\n";
         }
-      }
     }
     void MessAuthority::addStudents(){
         long int enrollment;
@@ -209,21 +155,44 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
     cin >> enrollment;
 
     // Check if student already exists
-    for (int i = 0; i < students.size(); i++) {
-
-        if (students[i].Enrollment_no == enrollment) {
-            cout << "Student already exists!";
-            return;
-        }
+    if (findStudent(enrollment) != nullptr) {
+        cout << "Student already exists!";
+        return;
     }
 
     cout << "Enter Student Name: ";
     cin.ignore();
     getline(cin, name);
 
-    student s(enrollment, name);
+    cout << "\nSelect student type:\n";
+    cout << "1. Hostel Student (10% meal discount)\n";
+    cout << "2. Day Scholar (no discount)\n";
+    cout << "3. Scholarship Student (custom discount)\n";
+    int type = readInt("Enter choice: ", 1, 3);
 
-    students.push_back(s);
+    // Each branch creates a different derived object, stored as a student pointer.
+    unique_ptr<student> s;
+    if (type == 1) {
+        string room;
+        cout << "Enter hostel room number: ";
+        getline(cin, room);
+        s = make_unique<HostelStudent>(enrollment, name, room);
+    }
+    else if (type == 2) {
+        string city;
+        cout << "Enter home city: ";
+        getline(cin, city);
+        s = make_unique<DayScholar>(enrollment, name, city);
+    }
+    else {
+        string scholarship;
+        cout << "Enter scholarship name: ";
+        getline(cin, scholarship);
+        int percent = readInt("Enter discount % (1-100): ", 1, 100);
+        s = make_unique<ScholarshipStudent>(enrollment, name, scholarship, percent);
+    }
+
+    students.push_back(std::move(s));
 
     cout << "Student added successfully!";
     }
@@ -236,7 +205,7 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
 
     for (int i = 0; i < students.size(); i++) {
 
-        if (students[i].Enrollment_no == enrollment) {
+        if (students[i]->Enrollment_no == enrollment) {
 
             students.erase(students.begin() + i);
 
@@ -253,25 +222,23 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
         return;
     }
 
-    for (int i = 0; i < students.size(); i++) {
+    for (size_t i = 0; i < students.size(); i++) {
 
         cout << "\nStudent " << i + 1 << endl;
 
-        cout << "Enrollment Number: "
-             << students[i].Enrollment_no << endl;
-
-        cout << "Student Name: "
-             << students[i].Student_name << endl;
+        cout << "Enrollment Number: " << students[i]->Enrollment_no << endl;
+        cout << "Student Name: " << students[i]->Student_name << endl;
+        cout << "Student Type: " << students[i]->getStudentType() << endl;   // virtual call
 
         cout << "Membership Status: ";
-
-        if (students[i].active_status == true)
+        if (students[i]->revoked)
+            cout << "Revoked" << endl;
+        else if (students[i]->active_status)
             cout << "Active" << endl;
         else
             cout << "Inactive" << endl;
 
-        cout << "Due Amount: Rs. "
-             << students[i].Due_amount << endl;
+        cout << "Due Amount: Rs. " << students[i]->Due_amount << endl;
 
         cout << "--------------------------\n";
     }
@@ -282,77 +249,41 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
         return;
     }
 
-    for (int i = 0; i < students.size(); i++) {
+    for (size_t i = 0; i < students.size(); i++) {
 
-        if (students[i].feedback != "") {
+        if (students[i]->feedback != "") {
 
-            cout << "\nStudent Name: "
-                 << students[i].Student_name << endl;
-
-            cout << "Feedback: "
-                 << students[i].feedback << endl;
-
+            cout << "\nStudent Name: " << students[i]->Student_name << endl;
+            cout << "Feedback: " << students[i]->feedback << endl;
             cout << "-------------------------\n";
         }
      }
     }   //viewing the feedback of students
+
+    // ---- Reports: each report is a different derived class used through a Report pointer ----
     void MessAuthority::generateWasteReport()
     {
-    int totalPrepared = 0;
-    int totalConsumed = 0;
-
-    for (int i = 0; i < messMenu.weeklySchedule.size(); i++)
-    {
-        for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++)
-        {
-            const meal& m = messMenu.weeklySchedule[i].second[j];
-
-            totalPrepared += m.getQuantityPrepared();
-
-            totalConsumed += m.getQuantityConsumed();
-        }
+        unique_ptr<Report> r = make_unique<WasteReport>(messMenu);
+        r->generate();
     }
 
-    int totalWasted = totalPrepared - totalConsumed;
-
-    cout << "\n========== WASTE REPORT ==========\n";
-
-    cout << "Total Food Prepared: "
-         << totalPrepared << " plates\n";
-
-    cout << "Total Food Consumed: "
-         << totalConsumed << " plates\n";
-
-    cout << "Total Food Wasted: "
-         << totalWasted << " plates\n";
-
-    cout << "==================================\n";
-    }
-    
     void MessAuthority::generateStudentsReport(){
-    int totalStudents = students.size();
-    int activeStudents = 0;
-    int inactiveStudents = 0;
-    int totalDue = 0;
-
-    for (int i = 0; i < students.size(); i++) {
-
-        if (students[i].active_status == true) {
-            activeStudents++;
-        }
-        else {
-            inactiveStudents++;
-        }
-
-        totalDue += students[i].Due_amount;
+        unique_ptr<Report> r = make_unique<StudentReport>(students);
+        r->generate();
     }
 
-    cout << "\n========== STUDENT REPORT ==========\n";
+    void MessAuthority::generateFinancialReport(){
+        unique_ptr<Report> r = make_unique<FinancialReport>(students);
+        r->generate();
+    }
 
-    cout << "Total Students: " << totalStudents << endl;
-    cout << "Active Students: " << activeStudents << endl;
-    cout << "Inactive Students: " << inactiveStudents << endl;
-    cout << "Total Outstanding Dues: Rs. " << totalDue << endl;
+    // One loop, three different reports: the classic runtime polymorphism example.
+    void MessAuthority::generateAllReports(){
+        vector<unique_ptr<Report>> reports;
+        reports.push_back(make_unique<WasteReport>(messMenu));
+        reports.push_back(make_unique<StudentReport>(students));
+        reports.push_back(make_unique<FinancialReport>(students));
 
-    cout << "====================================\n";
-    }   //report regarding # of students being subscribed, to eat all 3/4 time meals.
+        for (const auto& r : reports)
+            r->generate();
+    }

@@ -53,7 +53,7 @@ int main(){
                         cout << "Enter day (e.g. Monday): ";
                         cin >> day;
 
-                        vector<meal>* meals = authority.getMenu().getMealsForDay(day);
+                        MealList* meals = authority.getMenu().getMealsForDay(day);
                         if (meals == nullptr) {
                             cout << "Invalid day!\n";
                             break;
@@ -65,11 +65,11 @@ int main(){
 
                         for (int i = 0; i < meals->size(); i++) {
                             cout << "\nOption " << i + 1;
-                            (*meals)[i].displayMeal();
+                            (*meals)[i]->displayMeal();   // virtual call
                         }
 
                         int pick = readInt("Choose meal number: ", 1, meals->size());
-                        s->mark_attendence((*meals)[pick - 1]);
+                        s->mark_attendence(*(*meals)[pick - 1]);
                         break;
                     }
                     case 4:
@@ -106,8 +106,10 @@ int main(){
                 cout << "8. View feedback\n";
                 cout << "9. Waste report\n";
                 cout << "10. Student report\n";
+                cout << "11. Financial report\n";
+                cout << "12. All reports\n";
                 cout << "0. Back\n";
-                choice = readInt("Enter choice: ", 0, 10);
+                choice = readInt("Enter choice: ", 0, 12);
 
                 switch (choice) {
                     case 1:  authority.addMeal();               break;
@@ -120,6 +122,8 @@ int main(){
                     case 8:  authority.viewFeedback();          break;
                     case 9:  authority.generateWasteReport();   break;
                     case 10: authority.generateStudentsReport();break;
+                    case 11: authority.generateFinancialReport();break;
+                    case 12: authority.generateAllReports();    break;
                     case 0:
                         cout << "Returning to main menu...\n";
                         break;

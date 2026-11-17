@@ -3,6 +3,7 @@
 #include "menu.h"   
 #include "utils.h"  // For readInt
 #include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -11,7 +12,8 @@ student::student(long int enrollment, string name) {
     Student_name = name;
     active_status = true;
     Due_amount = 0;
-    MealsEaten =0;
+    TotalBilled = 0;
+    MealsEaten = 0;
     feedback= "";
     revoked = false;
     
@@ -54,10 +56,12 @@ void student::Give_feedback(){
         cout << "\n========== STUDENT DETAILS ==========\n";
         cout<< "Enrollment Number : " << Enrollment_no << '\n';
         cout<< "Student Name      : " << Student_name << '\n';
+        cout<< "Student Type      : " << getStudentType() << '\n';   // virtual call
         cout<< "Membership Status : " << (revoked ? "Revoked" : active_status ? "Active" : "Inactive") << '\n';
         cout<< "Total Meals Eaten : " << MealsEaten << '\n';
         cout<< "Total Due Bill    : Rs. " << Due_amount << '\n';
         cout<< "Latest Feedback   : " << (feedback.empty() ? "No feedback given yet" : feedback) << '\n';
+        printExtraDetails();   // virtual call: each student type prints its own extra info
         cout<< "=====================================\n";
     }
     
@@ -115,11 +119,17 @@ void student::mark_attendence(meal& m)
     // Record attendance only if consumption succeeds
     MealsEaten++;
 
-    // Add meal price to student's pending bill
-    Due_amount += static_cast<int>(m.getPrice());
+    // Both calls are resolved at runtime: m.getPrice() depends on the real meal type,
+    // calculateCharge() depends on the real student type.
+    int charge = calculateCharge(m.getPrice());
+    Due_amount += charge;
+    TotalBilled += charge;
 
     cout << "Attendance marked successfully!\n";
-    cout << "Meal price added: Rs. " << m.getPrice() << '\n';
+    cout << "Meal (" << m.getCategory() << ") price: Rs. " << m.getPrice() << '\n';
+    if (getDiscountRate() > 0)
+        cout << getStudentType() << " discount: " << getDiscountRate() * 100 << "%\n";
+    cout << "Amount charged: Rs. " << charge << '\n';
     cout << "Total pending bill: Rs. " << Due_amount << '\n';
 }
 
@@ -147,7 +157,53 @@ void student::view_menu(menu& mn)
 
         for (const auto& m : day.second)
         {
-            m.displayMeal();
+            m->displayMeal();   // runtime polymorphism
         }
     }
+}
+
+// ====================== base default behaviour ======================
+
+int student::calculateCharge(double mealPrice) const {
+    return static_cast<int>(std::round(mealPrice * (1.0 - getDiscountRate())));
+}
+
+// ====================== DERIVED : HostelStudent ======================
+
+HostelStudent::HostelStudent(long int enrollment, string name, string room)
+    : student(enrollment, name), roomNumber(room) {}
+
+string HostelStudent::getStudentType() const { return "Hostel Student"; }
+double HostelStudent::getDiscountRate() const { return 0.10; }
+
+void HostelStudent::printExtraDetails() const {
+    cout << "Hostel Room       : " << roomNumber << '\n';
+    cout << "Meal Discount     : 10% (resident benefit)\n";
+}
+
+// ====================== DERIVED : DayScholar ======================
+
+DayScholar::DayScholar(long int enrollment, string name, string city)
+    : student(enrollment, name), homeCity(city) {}
+
+string DayScholar::getStudentType() const { return "Day Scholar"; }
+double DayScholar::getDiscountRate() const { return 0.0; }
+
+void DayScholar::printExtraDetails() const {
+    cout << "Home City         : " << homeCity << '\n';
+    cout << "Meal Discount     : None (pays full price)\n";
+}
+
+// ====================== DERIVED : ScholarshipStudent ======================
+
+ScholarshipStudent::ScholarshipStudent(long int enrollment, string name,
+                                       string scholarship, int percent)
+    : student(enrollment, name), scholarshipName(scholarship), discountPercent(percent) {}
+
+string ScholarshipStudent::getStudentType() const { return "Scholarship Student"; }
+double ScholarshipStudent::getDiscountRate() const { return discountPercent / 100.0; }
+
+void ScholarshipStudent::printExtraDetails() const {
+    cout << "Scholarship       : " << scholarshipName << '\n';
+    cout << "Meal Discount     : " << discountPercent << "%\n";
 }

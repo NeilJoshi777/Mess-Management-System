@@ -20,30 +20,19 @@ menu::menu(int id) {
 
         for (int i = 0; i < days.size(); i++)
         {
-            weeklySchedule.push_back({days[i], vector<meal>()});
+            weeklySchedule.emplace_back(days[i], MealList());
         }
     }
     
     void menu::setMealsForDay() {
-        string day, type, item;
-        int n, itemCount, prepared;
-        double price;
+        string day;
+        int n;
 
         cout << "Enter day: ";
         cin >> day;
 
-        int dayIndex = -1;
-
-        for (int i = 0; i < weeklySchedule.size(); i++)
-        {
-            if (weeklySchedule[i].first == day)
-            {
-                dayIndex = i;
-                break;
-            }
-        }
-
-        if (dayIndex == -1)
+        MealList* meals = getMealsForDay(day);
+        if (meals == nullptr)
         {
             cout << "Invalid day!\n";
             return;
@@ -53,51 +42,18 @@ menu::menu(int id) {
 
         for (int i = 0; i < n; i++)
         {
-            cout << "\nEnter meal type: ";
-            cin >> type;
-
-            itemCount = readInt("Enter number of food items: ", 1, 50);
-
-            vector<string> items;
-
-            for (int j = 0; j < itemCount; j++)
-            {
-                cout << "Enter food item: ";
-
-                cin >> ws;
-                getline(cin, item);
-
-                items.push_back(item);
-            }
-
-            while (true)
-            {
-                cout << "Enter price: Rs. ";
-
-                if (cin >> price && price >= 0)
-                    break;
-
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-                cout << "Invalid price!\n";
-            }
-
-            prepared = readInt("Enter quantity prepared: ", 0, 100000);
-
-            meal m(type, items, price, prepared);
-
-            weeklySchedule[dayIndex].second.push_back(m);
+            // factory returns the right derived object behind a meal pointer
+            meals->push_back(promptAndCreateMeal());
         }
 
         cout << "\nMeals added to " << day << " successfully!\n";
-    }       // sets up mewals for a day
+    }       // sets up meals for a day
 
-    const vector<pair<string, vector<meal>>>& menu::getWeeklySchedule() const{
+    const vector<pair<string, MealList>>& menu::getWeeklySchedule() const{
         return weeklySchedule;
     }       // Returns schedule for a week
 
-    vector<meal>* menu::getMealsForDay(const string& day) {
+    MealList* menu::getMealsForDay(const string& day) {
         for (int i = 0; i < weeklySchedule.size(); i++)
         {
             if (weeklySchedule[i].first == day)

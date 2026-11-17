@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
 #include "student.h"
 #include "menu.h"
 using namespace std;
@@ -8,7 +9,7 @@ using namespace std;
 class MessAuthority {
     string authorityName;
     string authorityID;
-    vector<student> students;
+    vector<unique_ptr<student>> students;   // base pointers: holds all student types
     menu messMenu;
 
 public:
@@ -25,4 +26,6 @@ public:
     void viewFeedback();
     void generateWasteReport();
     void generateStudentsReport();
+    void generateFinancialReport();
+    void generateAllReports();
 };
