@@ -56,7 +56,7 @@ menu::menu(int id) {
     MealList* menu::getMealsForDay(const string& day) {
         for (int i = 0; i < weeklySchedule.size(); i++)
         {
-            if (weeklySchedule[i].first == day)
+            if (equalsIgnoreCase(weeklySchedule[i].first, day))
             {
                 return &weeklySchedule[i].second;
             }

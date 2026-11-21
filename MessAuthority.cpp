@@ -48,7 +48,7 @@ MessAuthority::MessAuthority(string name, string id, int menuId) : authorityName
 
     for (int i = 0; i < messMenu.weeklySchedule.size(); i++) {
 
-        if (messMenu.weeklySchedule[i].first == day) {
+        if (equalsIgnoreCase(messMenu.weeklySchedule[i].first,day)) {
 
             for (int j = 0; j < messMenu.weeklySchedule[i].second.size(); j++) {
 
